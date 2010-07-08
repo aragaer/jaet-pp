@@ -1,64 +1,9 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="jaet.css" type="text/css"?>
-<?xml-stylesheet href="chrome://jaet/skin/towlistitm.css" type="text/css"?>
-
-<!DOCTYPE window [
-<!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
-%jaet;
-]>
-
-<window id="main" title="&title;" width="800" height="600"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	onload="onLoad();"
-	persist="screenX screenY width height sizemode">
-
-<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
-	
-<script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-<script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
-
-    <command id="File:Exit" oncommand="quit()"/>
-    <command id="Settings:Preferences" oncommand="setupPreferences()"/>
-    <command id="Settings:ApiKeys" oncommand="setupApiKeys()"/>
-    <command id="Settings:POS" oncommand="setupPOS()"/>
-
-    <label id="quit-label" value="&exit_confirm;" hidden="true" />
-    
-    <toolbar id="main-toolbar">
-        <toolbaritem>
-            <menubar id="main-menubar" statusbar="statusbar-display"
-                     style="border:0px;padding:0px;margin:0px;float:left;">
-                <menu label="&menu.file.label;" accesskey="&menu.file.accesskey;">
-                    <menupopup id="menu_FilePopup">
-                        <menuitem label="&menu_file.exit.label;"
-                                  accesskey="&menu_file.exit.accesskey;"
-                                  command="File:Exit"/>
-                    </menupopup>
-                </menu>
-                <menu label="&menu.settings.label;" accesskey="&menu.settings.accesskey;">
-                    <menupopup id="menu_SettingsPopup">
-                        <menuitem label="&menu_settings.pref.label;"
-                                  accesskey="&menu_settings.pref.accesskey;"
-                                  command="Settings:Preferences"/>
-                        <menuitem label="&menu_settings.api.label;"
-                                  accesskey="&menu_settings.api.accesskey;"
-                                  command="Settings:ApiKeys"/>
-                        <menuitem label="POS configuration"
-                                  command="Settings:POS"/>
-                    </menupopup>
-                </menu>
-            </menubar>
-        </toolbaritem>
-    </toolbar>
-    <tabbox id='main-tabs-list' flex="600" height="100%">
-	<tabs id='main-tabs' />
-	<tabpanels id='main-panels' flex="600"/>
-    </tabbox>
-    <hbox>
-        <spacer flex="1"/>
-        <label id="status" class="api_status" value=""/>
-    </hbox>
-</window>
+<overlay id="pp-jaet" 
+         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+    <menupopup id="menu_ViewPopup">
+        <menuitem label="Production Planner" type="checkbox"
+                  panel="pp" chrome="chrome://pp/content/pp.xul"/>
+    </menupopup>
+</overlay>
 

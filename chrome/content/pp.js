@@ -199,7 +199,7 @@ BuyTreeView.prototype = new TreeView();
 BuyTreeView.prototype.isBlueprint = function (aRow) aRow < this.bpCount;
 BuyTreeView.prototype.getImageSrc = function (row,col)
         this.values[row].isk && this.values[row].isk == ' ' && col.id.split('-')[0] == 'isk'
-            ? "chrome://jaet/content/images/loading.gif"
+            ? "chrome://pp/content/img/loading.gif"
             : null,
 BuyTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
@@ -470,7 +470,7 @@ Project.prototype = {
 
 function addToProject1() {
     var params = {in: {dlg: 'add-to-proj'}, out: null};
-    openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
+    openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
     tabbox.selectedPanel.project.addToOrder(params.out.typeID, params.out.count);
@@ -486,7 +486,7 @@ function removeFromProject1() {
         return;
     }
     var params = {in: {dlg: 'buy-build', amount: project.buy[item.type]}};
-    openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
+    openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
     project.addToOrder(item.type, -params.out.count);
@@ -501,7 +501,7 @@ function buyBuild(action) {
     if (!src.active)
         return;
     var params = {in: {dlg: 'buy-build', amount: src.active.cnt}};
-    openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
+    openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
     project.wantToBuild(src.active.type, action == 'build' ? params.out.count : -params.out.count);
@@ -515,7 +515,7 @@ function gotIt1(spend_isk) {
         ? {dlg: 'blueprint', price: spend_isk ? getItemTypeByID(itm.type).price : 0}
         : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? getItemTypeByID(itm.type).price : 0}
     };
-    openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
+    openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
     if (!params.out.cost)
@@ -534,7 +534,7 @@ function keepIt1(spend_isk) {
         ? {dlg: 'blueprint', price: spend_isk ? getItemTypeByID(itm.type).price : 0, me : itm.me}
         : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? getItemTypeByID(itm.type).price : 0}
     };
-    openDialog("chrome://jaet/content/tools/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
+    openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
     if (!params.out.cost)
@@ -551,7 +551,7 @@ function builtIt1() {
     let itm = build.active;
     var type = getItemTypeByID(itm.type);
     var params = {in: {itm: itm, type: type, pr: project}};
-    openDialog("chrome://jaet/content/tools/pp_build.xul", "", "chrome,dialog, modal", params).focus();
+    openDialog("chrome://pp/content/pp_build.xul", "", "chrome,dialog, modal", params).focus();
     if (!params.out || !params.out.cnt)
         return;
     params.out.bp.type = type.bp;
@@ -711,7 +711,7 @@ function save() {
 
 function open() {
     var params = {in:{}};
-    openDialog("chrome://jaet/content/dialogs/pp.xul", null, "chrome,dialog,modal", params).focus();
+    openDialog("chrome://pp/content/dialogs/pp.xul", null, "chrome,dialog,modal", params).focus();
     if (!params.out)
         return;
     for each (p in projectList)

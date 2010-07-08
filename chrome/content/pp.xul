@@ -1,11 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://jaet/skin/pp.css" type="text/css"?>
-
-<!DOCTYPE window [
-<!ENTITY % jaet SYSTEM "chrome://jaet/locale/jaet.dtd">
-%jaet;
-]>
+<?xml-stylesheet href="chrome://pp/skin/pp.css" type="text/css"?>
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     title="JAET Production Planner" onload="ppOnload()" width="800" height="600"
@@ -21,51 +16,27 @@ function ppDummy() {
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
 <script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
-<script type="application/x-javascript" src="chrome://jaet/content/tools/pp.js"/>
+<script type="application/x-javascript" src="chrome://pp/content/pp.js"/>
     <command id="File:New" oncommand="openPanel()"/>
     <command id="File:Open" oncommand="open()"/>
     <command id="File:Close" oncommand="close()"/>
     <command id="File:Save" oncommand="save()"/>
     <command id="File:Import" oncommand="ppDummy()"/>
     <command id="File:Export" oncommand="ppDummy()"/>
-    <command id="File:Exit" oncommand="ppQuit()"/>
 
     <command id="Edit:Undo" oncommand="tabbox.selectedPanel.project.undo()" />
     <command id="Edit:Redo" oncommand="tabbox.selectedPanel.project.redo()" />
 
     <command id="Settings:BP" oncommand="ppDummy()"/>
-    <command id="Settings:Pref" oncommand="ppDummy()"/>
 
-    <menubar id="pp-menubar">
-        <menu label="File" accesskey="F">
-            <menupopup id="pp-file-popup">
-                <menuitem label="New" command="File:New"/>
-                <menuitem label="Open" command="File:Open"/>
-                <menuitem label="Close" command="File:Close"/>
-                <menuitem label="Save" command="File:Save"/>
-                <menuseparator/>
-                <menuitem label="Import..." command="File:Import"/>
-                <menuitem label="Export..." command="File:Export"/>
-                <menuseparator/>
-                <menuitem label="Quit" command="File:Exit"/>
-            </menupopup>
-        </menu>
-        <menu label="Settings" accesskey="S">
-            <menupopup id="pp-settings-popup">
-                <menuitem label="Blueprints" command="Settings:BP"/>
-                <menuseparator/>
-                <menuitem label="Preferences" command="Settings:Pref"/>
-            </menupopup>
-        </menu>
-    </menubar>
     <toolbar>
-        <toolbarbutton image="chrome://jaet/content/images/new_16.png" command="File:New"/>
-        <toolbarbutton image="chrome://jaet/content/images/open_16.png" command="File:Open"/>
-        <toolbarbutton image="chrome://jaet/content/images/save_16.png" command="File:Save"/>
-        <toolbarbutton image="chrome://jaet/content/images/close.png" command="File:Close"/>
+        <toolbarbutton image="chrome://pp/content/img/new_16.png" command="File:New"/>
+        <toolbarbutton image="chrome://pp/content/img/open_16.png" command="File:Open"/>
+        <toolbarbutton image="chrome://pp/content/img/save_16.png" command="File:Save"/>
+        <toolbarbutton image="chrome://pp/content/img/close.png" command="File:Close"/>
         <toolbarseparator />
-        <toolbarbutton image="chrome://jaet/content/images/undo.png" command="Edit:Undo" />
-        <toolbarbutton image="chrome://jaet/content/images/redo.png" command="Edit:Redo" />
+        <toolbarbutton image="chrome://pp/content/img/undo.png" command="Edit:Undo" />
+        <toolbarbutton image="chrome://pp/content/img/redo.png" command="Edit:Redo" />
     </toolbar>
     <menupopup id="buy-menu">
         <menuitem id="btn-build" label="Move to 'to build'" oncommand="buyBuild('build')"/>

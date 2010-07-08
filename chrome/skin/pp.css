@@ -1,5 +1,5 @@
 tabpanel.project {
-    -moz-binding: url('chrome://jaet/content/tools/pp.xml#project_box') !important;
+    -moz-binding: url('chrome://pp/content/pp.xml#project_box') !important;
 }
 splitter grippy {
     background-color:red;

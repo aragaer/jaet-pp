@@ -94,7 +94,7 @@ function recalc() {
         i.needed = Math.round(runs.value * i.cnt * 100)/100;
     for each (i in raw.concat(extra)) {
         i.missing = Math.max(i.needed - i.present, 0);
-        i.img = "chrome://jaet/content/images/" + (i.missing ? 'missing' : 'present') + ".png";
+        i.img = "chrome://pp/content/img/" + (i.missing ? 'missing' : 'present') + ".png";
         params.out.needed[i.id] = +i.needed;
     }
     QuotaTreeView.treebox.invalidate();
