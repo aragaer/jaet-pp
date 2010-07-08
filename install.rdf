@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>{7b141e84-14f0-4cc9-b274-5180014054f5}</em:id>
+    <em:version>0.1</em:version>
+    <em:type>2</em:type>
+    <em:targetApplication>
+      <Description> <!-- JAET -->
+	<em:id>{d550301b-77fe-4323-8121-0fa3a79fa746}</em:id>
+	<em:minVersion>0.2</em:minVersion>
+	<em:maxVersion>0.2</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    <em:name>Production Planner</em:name>
+    <em:description>A tool to plan and track industrial projects</em:description>
+    <em:creator>Aragaer</em:creator>
+  </Description>
+</RDF>
+
