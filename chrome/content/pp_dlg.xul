@@ -109,7 +109,7 @@ function updatePerUnit() {
                     </row>
                     <row style="-moz-box-align:center">
                         <label value="ME" />
-                        <textbox id="me" type="number"/>
+                        <textbox id="me" type="number" min="-10"/>
                     </row>
                     <row style="-moz-box-align:center" id="bp-cost" collapsed="true">
                         <label value="Cost: " />
