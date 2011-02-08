@@ -1,4 +1,4 @@
-var gEIS, gDB, gPC, gPS;
+var gEIS, gDB, gPC, gPS, gOS;
 var tabbox;
 const MAX_UNDO = 10;
 const Queries = {
@@ -569,6 +569,7 @@ function init() {
     gPC  = Cc["@aragaer/eve/market-data/provider;1?name=eve-central"].
             getService(Ci.nsIEveMarketDataProviderService);
     gPS  = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+    gOS = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
     var conn = gDB.getConnection();
     tabbox = document.getElementById('tabbox');
     if (!conn.tableExists('projects'))
@@ -584,6 +585,14 @@ function init() {
 
     for (i in showHide)
         document.getElementById(i+'-menu').addEventListener('popupshowing', showHide[i], true);
+
+    gOS.addObserver({
+        observe: function (aSubject, aTopic, aData) {
+            var bool = aSubject.QueryInterface(Ci.nsISupportsPRBool);
+            if (aTopic == 'quit-application-requested')
+                bool.data = ppPrepareQuit() || bool.data;
+        }
+    }, 'quit-application-requested', false);
 }
 
 function ppOnload() {
@@ -644,10 +653,8 @@ function confirmSave() {
             "' is not saved\nDiscard changes?", flags, "", "Discard", "", null, {});
 }
 
-function ppQuit() {
-    if (!gPS.confirm(null, "Quit", "Really quit Production Planner?"))
-        return;
-
+/* returns true if quit have to be cancelled */
+function ppPrepareQuit() {
     var panelList = [];
 tabpanels:
     for each (p in projectList) {
@@ -664,13 +671,13 @@ tabpanels:
                     panelList.push(project.id);
                 continue tabpanels;
             case 2:
-                return;
+                return true;
             }
         }
         panelList.push(project.id);
     }
     Prefs.setCharPref('jaet.production_planner.tabs', panelList.join(','));
-    doQuit(false);
+    return false;
 }
 
 function save() {
@@ -714,12 +721,11 @@ function open() {
     openDialog("chrome://pp/content/dialogs/pp.xul", null, "chrome,dialog,modal", params).focus();
     if (!params.out)
         return;
-    for each (p in projectList)
-        if (p.panel.project.id == params.out.id) {
-            tabbox.selectedPanel = p.panel;
-            tabbox.selectedTab = p.tab;
-            return;
-        }
+    for each (p in projectList) if (p.panel.project.id == params.out.id) {
+        tabbox.selectedPanel = p.panel;
+        tabbox.selectedTab = p.tab;
+        return;
+    }
     openPanel(params.out.id);
 }
 
