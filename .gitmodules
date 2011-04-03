@@ -1,0 +1,6 @@
+[submodule "src/components/eve-api"]
+	path = src/components/eve-api
+	url = git://github.com/aragaer/EveAPI.git
+[submodule "src/components/eve-central"]
+	path = src/components/eve-central
+	url = git://github.com/aragaer/eve-central.git

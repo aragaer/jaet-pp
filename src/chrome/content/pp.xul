@@ -6,7 +6,7 @@
     title="JAET Production Planner" onload="ppOnload()" width="800" height="600"
     persist="screenX screenY width height sizemode" id="pp-main">
 
-<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+<script type="application/x-javascript" src="chrome://pp/content/general.js"/>
 <script><![CDATA[
 function ppDummy() {
     alert("Not implemented yet");
@@ -15,7 +15,7 @@ function ppDummy() {
 
 <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-<script type="application/x-javascript" src="chrome://jaet/content/actions.js"/>
+<script type="application/x-javascript" src="chrome://pp/content/actions.js"/>
 <script type="application/x-javascript" src="chrome://pp/content/pp.js"/>
     <command id="File:New" oncommand="openPanel()"/>
     <command id="File:Open" oncommand="open()"/>

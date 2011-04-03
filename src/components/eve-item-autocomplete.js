@@ -10,6 +10,7 @@ const R_CLASS_NAME = "EVE Item Type Autocomplete Result";
 const R_CONTRACT_ID = "@mozilla.org/autocomplete/item-type-result;1";
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
 
 // Implements nsIAutoCompleteResult
 function ItemTypeAutoCompleteResult(searchString, searchResult,
@@ -42,6 +43,7 @@ ItemTypeAutoCompleteResult.prototype = {
     get errorDescription()  this._errorDescription,
     get matchCount()        this._results.length,
     getValueAt:     function (index) this._results[index],
+    getLabelAt:     function (index) this._results[index],
     getCommentAt:   function (index) this._comments[index],
     getStyleAt:     function (index) null,
     getImageAt:     function (index) "",
@@ -53,9 +55,7 @@ ItemTypeAutoCompleteResult.prototype = {
 var query;
 // Implements nsIAutoCompleteSearch
 function ItemTypeAutoCompleteSearch() {
-    Cc["@mozilla.org/observer-service;1"].
-            getService(Ci.nsIObserverService).
-            addObserver(this, 'eve-db-init', false);
+    Services.obs.addObserver(this, 'eve-db-init', false);
     this.observe('','eve-db-init',''); // Force the first init
 }
 
@@ -109,9 +109,7 @@ ItemTypeAutoCompleteSearch.prototype = {
 };
 
 function BuildableAutoCompleteSearch() {
-    Cc["@mozilla.org/observer-service;1"].
-            getService(Ci.nsIObserverService).
-            addObserver(this, 'eve-db-init', false);
+    Services.obs.addObserver(this, 'eve-db-init', false);
     this.observe('','eve-db-init',''); // Force the first init
 }
 
@@ -135,8 +133,8 @@ BuildableAutoCompleteSearch.prototype = {
         var sslc = searchString.toLowerCase();
         var ssl = searchString.length;
         var results = [];
-        this.query.params.pattern = sslc+"%";
         try {
+            this.query.params.pattern = sslc+"%";
             while (this.query.step())
                 results.push([this.query.row.typeName, this.query.row.typeID]);
         } catch (e) {
@@ -168,7 +166,8 @@ BuildableAutoCompleteSearch.prototype = {
 
 var components = [ItemTypeAutoCompleteResult, ItemTypeAutoCompleteSearch,
     BuildableAutoCompleteSearch];
-function NSGetModule(compMgr, fileSpec) {
-    return XPCOMUtils.generateModule(components);
-}
 
+if (XPCOMUtils.generateNSGetFactory)
+    var NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
+else
+    var NSGetModule = XPCOMUtils.generateNSGetModule(components);

@@ -157,7 +157,7 @@ OrderTreeView.prototype.rebuild = function () {
     this.values = [];
     this.total = 0;
     var me = this;
-    for each (itm in this.pr.project.order) {
+    for each (var itm in this.pr.project.order) {
         var type = getItemTypeByID(itm.type);
         type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
         this.values.push({
@@ -176,7 +176,7 @@ SpentTreeView.prototype.rebuild = function () {
     this.values = [];
     this.total = 0;
     var me = this;
-    for each (itm in this.pr.project.spent) {
+    for each (var itm in this.pr.project.spent) {
         var type;
         if (itm.type == 'isk')
             me.total += itm.cnt;
@@ -208,9 +208,9 @@ BuyTreeView.prototype.rebuild = function () {
     let tmpbp = this.pr.project.bp_buy = {};
     this.bpCount = 0;
     this.total = 0;
-    for each (itm in this.pr.project.order)
+    for each (var itm in this.pr.project.order)
         tmp[itm.type] = itm.cnt;
-    for each (itm in this.pr.project.build) {
+    for each (var itm in this.pr.project.build) {
         if (!tmp[itm.type])
             tmp[itm.type] = 0;
         tmp[itm.type] -= itm.cnt;
@@ -237,12 +237,12 @@ BuyTreeView.prototype.rebuild = function () {
             tmp[m] += itm.cnt * u;
         }
     }
-    for each (itm in this.pr.project.acquired) {
+    for each (var itm in this.pr.project.acquired) {
         if (!tmp[itm.type])
             tmp[itm.type] = 0;
         tmp[itm.type] -= itm.cnt;
     }
-    for (i in tmpbp) {
+    for (var i in tmpbp) {
         if (tmpbp[i] <= 0)
             continue;
         var type = getItemTypeByID(i);
@@ -256,7 +256,7 @@ BuyTreeView.prototype.rebuild = function () {
     }
     if (this.values.length)
         this.values.push({itm: false});
-    for (i in tmp) {
+    for (var i in tmp) {
         if (tmp[i] <= 0)
             continue;
         var type = getItemTypeByID(i);
@@ -284,7 +284,7 @@ BuildTreeView.prototype = new TreeView();
 BuildTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
-    for each (itm in this.pr.project.build)
+    for each (var itm in this.pr.project.build)
         this.values.push({
             type:   itm.type,
             itm:    getItemTypeByID(itm.type).type.name,
@@ -301,7 +301,7 @@ AcquiredTreeView.prototype.rebuild = function () {
     this.values = [];
     this.total = 0;
     var me = this;
-    for each (itm in this.pr.project.blueprints)
+    for each (var itm in this.pr.project.blueprints)
         this.values.push({
             type:   itm.type,
             itm:    getItemTypeByID(itm.type).type.name,
@@ -311,7 +311,7 @@ AcquiredTreeView.prototype.rebuild = function () {
     this.bpCount = this.values.length;
     if (this.values.length)     // Separator
         this.values.push({itm: false});
-    for each (itm in this.pr.project.acquired) {
+    for each (var itm in this.pr.project.acquired) {
         var type = getItemTypeByID(itm.type);
         type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
         this.values.push({
@@ -327,7 +327,7 @@ AcquiredTreeView.prototype.rebuild = function () {
 const projFields = 'buy bp_buy order blueprints acquired build spent'.split(' ');
 function Project(box) {
     this.box = box;
-    for each (i in projFields)
+    for each (var i in projFields)
         this[i] = {};
     this._states = [];
     this._store();
@@ -337,7 +337,7 @@ Project.prototype = {
     _curstate:      -1,
     _store:         function () {
         var tmp = {};
-        for each (i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
+        for each (var i in ['order', 'blueprints', 'acquired', 'build', 'spent'])
             tmp[i] = this[i];
         this._states = this._states.slice(0, this._curstate + 1);
         this._states.push(JSON.stringify(tmp));
@@ -357,9 +357,9 @@ Project.prototype = {
         document.getElementById("Edit:Undo").disabled = i == 0;
         document.getElementById("Edit:Redo").disabled = i == this._states.length - 1;
         var tmp = JSON.parse(this._states[i]);
-        for (l in tmp)
+        for (var l in tmp)
             this[l] = tmp[l];
-        for each (bp in this.blueprints) if (!bp.cnt)
+        for each (var bp in this.blueprints) if (!bp.cnt)
             bp.cnt = Infinity;
         this.box.rebuild();
     },
@@ -392,7 +392,7 @@ Project.prototype = {
     },
     getBPMEList:    function (typeID) {
         var bpID = getItemTypeByID(typeID).bp;
-        for each (bp in [i for each (i in this.blueprints) if (i.type == bpID)].
+        for each (var bp in [i for each (i in this.blueprints) if (i.type == bpID)].
                 sort(function (a, b) b.me - a.me))
             yield {cnt: bp.cnt, me: bp.me};
         yield {cnt: Infinity, me: 0, fake: true};
@@ -576,7 +576,7 @@ function init() {
         conn.createTable('projects', 'projectID integer primary key autoincrement not null, ' +
             'projectName char, projectDescr char, projectData char');
 
-    for (i in Queries)
+    for (var i in Queries)
         try {
             Stms[i] = conn.createStatement(Queries[i]);
         } catch (e) {
@@ -597,7 +597,7 @@ function init() {
 
 function ppOnload() {
     init();
-    for each (id in getCharPref('jaet.production_planner.tabs', '').split(',')) if (id)
+    for each (var id in getCharPref('jaet.production_planner.tabs', '').split(',')) if (id)
         openPanel(id);
 }
 
@@ -657,7 +657,7 @@ function confirmSave() {
 function ppPrepareQuit() {
     var panelList = [];
 tabpanels:
-    for each (p in projectList) {
+    for each (var p in projectList) {
         let project = p.panel.project;
         tabbox.selectedPanel = p.panel;
         tabbox.selectedTab = p.tab;

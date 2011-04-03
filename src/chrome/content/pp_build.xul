@@ -6,7 +6,7 @@
     ondialogcancel="params.out.cnt = 0; return true"
     onload="onLoad();" id="pp-build" persist="screenX screenY">
 
-<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+<script type="application/x-javascript" src="chrome://pp/content/general.js"/>
 <script><![CDATA[
 var bps, bplist, params, runs, raw, extra;
 var QuotaTreeView = {
@@ -62,12 +62,12 @@ function onLoad() {
     document.getElementById('name').label = "Building "+params.in.itm.itm;
     bps = [i for (i in params.in.pr.getBPMEList(params.in.itm.type))];
     bplist = document.getElementById('bplist');
-    for each (bp in bps)
+    for each (var bp in bps)
         bplist.appendItem("ME "+bp.me+"; Runs: "+bp.cnt);
     bplist.selectedIndex = 0;
     raw = [{id:id,cnt:cnt} for ([id,cnt] in Iterator(params.in.type.raw))];
     extra = [{id:id,cnt:cnt} for ([id,cnt] in Iterator(params.in.type.extra))];
-    for each (i in raw.concat(extra)) {
+    for each (var i in raw.concat(extra)) {
         i.name = gEIS.getItemType(i.id).name;
         var aqu = params.in.pr.acquired[i.id];
         i.present = aqu ? aqu.cnt : 0;
@@ -88,7 +88,7 @@ function bpselect() {
 }
 function recalc() {
     params.out.needed = {};
-    for each (i in raw)
+    for each (var i in raw)
         i.needed = runs.value * Math.round(i.cnt*(1 + params.in.type.waste/100/(1+bps[bplist.selectedIndex].me)));
     for each (i in extra)
         i.needed = Math.round(runs.value * i.cnt * 100)/100;

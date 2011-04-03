@@ -4,7 +4,7 @@
 <dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     ondialogaccept="return onaccept()" ondialogcancel="return true"
     onload="onLoad();" id="pp-file-dlg" persist="screenX screenY">
-<script type="application/x-javascript" src="chrome://jaet/content/general.js"/>
+<script type="application/x-javascript" src="chrome://pp/content/general.js"/>
 <script type="application/x-javascript"><![CDATA[
 var params;
 var gDB;
