@@ -186,7 +186,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = chrome components defaults
-pkgdata_DATA = application.ini chrome.manifest
+pkgdata_DATA = application.ini chrome.manifest install.rdf icon.png
 all: all-recursive
 
 .SUFFIXES:

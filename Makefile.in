@@ -640,6 +640,16 @@ uninstall-am:
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
 	pdf-am ps ps-am tags tags-recursive uninstall uninstall-am
 
+xpi: all
+	-rm -rf `pwd`/xpi $(PACKAGE).xpi
+	mkdir `pwd`/xpi
+	make DESTDIR=`pwd`/xpi install
+#minor cleanup
+	sed -i -e '/content wrapper/d' -e '/locale branding/d' \
+	    `pwd`/xpi$(pkgdatadir)/chrome.manifest
+	(cd `pwd`/xpi$(pkgdatadir) && zip -r $(PACKAGE).xpi chrome components install.rdf chrome.manifest icon.png)
+	mv `pwd`/xpi$(pkgdatadir)/$(PACKAGE).xpi `pwd`
+	rm -rf `pwd`/xpi
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

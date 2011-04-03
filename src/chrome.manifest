@@ -1,4 +1,5 @@
 content pp chrome/content/
+content wrapper .
 skin pp classic/1.0 chrome/skin/
 overlay chrome://jaet/content/jaet.xul chrome://pp/content/jaet.xul
 locale branding en-US locale/branding/

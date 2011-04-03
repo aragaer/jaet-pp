@@ -721,7 +721,7 @@ function open() {
     openDialog("chrome://pp/content/dialogs/pp.xul", null, "chrome,dialog,modal", params).focus();
     if (!params.out)
         return;
-    for each (p in projectList) if (p.panel.project.id == params.out.id) {
+    for each (var p in projectList) if (p.panel.project.id == params.out.id) {
         tabbox.selectedPanel = p.panel;
         tabbox.selectedTab = p.tab;
         return;
