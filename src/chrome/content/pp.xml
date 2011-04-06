@@ -71,6 +71,7 @@
                 <body><![CDATA[
                     var me = this;
                     var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+                    Components.utils.import("resource://pp/views.js");
                     [{cons: OrderTreeView,   anonid: 'order',  cols: ['itm', 'cnt']},
                     {cons: SpentTreeView,    anonid: 'spent',  cols: ['itm', 'cnt']},
                     {cons: BuyTreeView,      anonid: 'buy',    cols: ['itm', 'cnt', 'isk']},

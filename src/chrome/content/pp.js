@@ -1,11 +1,8 @@
 var gEIS, gDB, gPC, gPS, gOS;
 var tabbox;
+Components.utils.import("resource://pp/itemtype.js");
 const MAX_UNDO = 10;
 const Queries = {
-    getBPByType:    "select blueprintTypeID, wasteFactor from invBlueprintTypes where productTypeID=:tid",
-    getRawMats:     "select materialTypeID as tid, quantity from invTypeMaterials where typeID=:tid",
-    getExtraMats:   "select requiredTypeID as tid, quantity, damagePerJob from ramTypeRequirements " +
-            "where typeID=:bpid and activityID=1;",
     getProjName:    "select projectName from projects where projectID=:id;",
     saveProjName:   "replace into projects (projectID, projectName) values (:id, :pname);",
     checkProjName:  "select projectID from projects where projectName=:pname;",
@@ -13,85 +10,7 @@ const Queries = {
     loadProj:       "select projectData from projects where projectID=:id",
 }, Stms = { };
 
-const AllItemTypes = {};
-function ItemType(typeID) {
-    this.id = typeID;
-    this._bp = this._waste = null;
-}
-
-function getItemTypeByID(typeID) {
-    if (!AllItemTypes[typeID])
-        AllItemTypes[typeID] = new ItemType(typeID);
-    return AllItemTypes[typeID];
-}
-
-ItemType.prototype = {
-    get type() {
-        this.__defineGetter__('type', function () this._type);
-        return this._type = gEIS.getItemType(this.id);
-    },
-    get bp()    this._getBPAndWaste('_bp'),
-    get waste() this._getBPAndWaste('_waste'),
-    _getBPAndWaste: function (arg) {
-        this.__defineGetter__('bp',     function () this._bp);
-        this.__defineGetter__('waste',  function () this._waste);
-        let stm = Stms.getBPByType;
-        try {
-            stm.params.tid = this.id;
-            if (stm.step()) {
-                this._bp = stm.row.blueprintTypeID;
-                this._waste = stm.row.wasteFactor;
-            }
-        } catch (e) {
-            println("Production planner: getBPByType for "+this.id+": "+e);
-        } finally { stm.reset(); }
-        return this[arg];
-    },
-    get raw()   {
-        this.__defineGetter__('raw', function () this._raw);
-        this._raw = {};
-        let stm = Stms.getRawMats;
-        try {
-            stm.params.tid = this.id;
-            while (stm.step())
-                this._raw[stm.row.tid] = stm.row.quantity;
-        } catch (e) {
-            dump("Filling 'raw' for "+this.type.name+": "+e+"\n");
-        } finally { stm.reset(); }
-        return this._raw;
-    },
-    get extra() {
-        this.__defineGetter__('extra', function () this._extra);
-        this._extra = {};
-        let stm = Stms.getExtraMats;
-        try {
-            stm.params.bpid = this.bp;
-            while (stm.step()) if (stm.row.damagePerJob) // TODO: Add reprocessing here
-                this._extra[stm.row.tid] = stm.row.quantity * stm.row.damagePerJob;
-        } catch (e) {
-            dump("Filling 'extra' for "+this.type.name+": "+e+"\n");
-        } finally { stm.reset(); }
-        return this._extra;
-    },
-    getPriceAsync:  function (handler, args) {
-        var me = this;
-        if (!this._price || this._price == -1)
-            gPC.getPriceForItemAsync(this.id, {}, function (price) {
-                me._price = price;
-                if (handler)
-                    handler(price, args);
-            });
-        else if (handler)
-            handler(this._price, args);
-    },
-    get price() {
-        this.__defineGetter__('price', function () this._price);
-        this._price = -1;
-        this.getPriceAsync();
-        return this._price;
-    },
-};
-
+// handlers for right-click menu
 const showHide = {
     order:      function (aEvt) {
         let order = tabbox.selectedPanel.orderView;
@@ -109,7 +28,7 @@ const showHide = {
         buy.activeRow = buy.treebox.getRowAt(aEvt.clientX, aEvt.clientY);
         if (buy.activeRow == -1 || !buy.active.itm)
             aEvt.preventDefault();
-        document.getElementById('btn-build').hidden = !getItemTypeByID(buy.active.type).bp;
+        document.getElementById('btn-build').hidden = !ItemType.byID(buy.active.type).bp;
     },
     acquired:   function (aEvt) {
         let acquired = tabbox.selectedPanel.acquiredView;
@@ -120,209 +39,6 @@ const showHide = {
     spent:      function (aEvt) { },
 };
 
-function TreeView() { }
-TreeView.prototype = {
-    get total()         this._total,
-    set total(value) {
-        this._total = Math.round(value*100)/100;
-        if (this.totalLabel)
-            this.totalLabel.value = this._total.toLocaleString()+" ISK total";
-    },
-    values:             [],
-    get rowCount()      this.values.length,
-    get active()        this.values[this.activeRow],
-    getCellText:        function (aRow, aCol) this.values[aRow][aCol.id.split('-')[0]] || '??',
-    setCellText:        function (row,col,value) { },
-    isEditable:         function (row,col) false,
-    isContainer:        function (aRow) false,
-    isContainerOpen:    function (aRow) false,
-    isContainerEmpty:   function (aRow) false,
-    getLevel:           function (aRow) 0,
-    getParentIndex:     function (aRow) 0,
-    hasNextSibling:     function (aRow, aAfterRow) 0,
-    toggleOpenState:    function (aRow) { },
-    setTree:            function (treebox) this.treebox = treebox,
-    isSeparator:        function (aRow) !this.values[aRow].itm,
-    isSorted:           function () false,
-    getImageSrc:        function (row,col) null,
-    getRowProperties:   function (row,props) { },
-    getCellProperties:  function (row,col,props) { },
-    getColumnProperties: function (colid,col,props) { }
-};
-
-function OrderTreeView() { }
-OrderTreeView.prototype = new TreeView();
-OrderTreeView.prototype.rebuild = function () {
-    this.treebox.rowCountChanged(0, -this.values.length);
-    this.values = [];
-    this.total = 0;
-    var me = this;
-    for each (var itm in this.pr.project.order) {
-        var type = getItemTypeByID(itm.type);
-        type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
-        this.values.push({
-            type:   itm.type,
-            itm:    type.type.name,
-            cnt:    itm.cnt.toLocaleString()
-        });
-    }
-    this.treebox.rowCountChanged(0, this.values.length);
-}
-
-function SpentTreeView() { }
-SpentTreeView.prototype = new TreeView();
-SpentTreeView.prototype.rebuild = function () {
-    this.treebox.rowCountChanged(0, -this.values.length);
-    this.values = [];
-    this.total = 0;
-    var me = this;
-    for each (var itm in this.pr.project.spent) {
-        var type;
-        if (itm.type == 'isk')
-            me.total += itm.cnt;
-        else {
-            type = getItemTypeByID(itm.type);
-            if (!itm.isBP)
-                type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
-        }
-        this.values.push({
-            type:   itm.type,
-            itm:    itm.type == 'isk' ? 'ISK' : type.type.name,
-            cnt:    itm.cnt.toLocaleString(),
-        });
-    }
-    this.treebox.rowCountChanged(0, this.values.length);
-}
-
-function BuyTreeView() { }
-BuyTreeView.prototype = new TreeView();
-BuyTreeView.prototype.isBlueprint = function (aRow) aRow < this.bpCount;
-BuyTreeView.prototype.getImageSrc = function (row,col)
-        this.values[row].isk && this.values[row].isk == ' ' && col.id.split('-')[0] == 'isk'
-            ? "chrome://pp/content/img/loading.gif"
-            : null,
-BuyTreeView.prototype.rebuild = function () {
-    this.treebox.rowCountChanged(0, -this.values.length);
-    this.values = [];
-    let tmp = this.pr.project.buy = {};
-    let tmpbp = this.pr.project.bp_buy = {};
-    this.bpCount = 0;
-    this.total = 0;
-    for each (var itm in this.pr.project.order)
-        tmp[itm.type] = itm.cnt;
-    for each (var itm in this.pr.project.build) {
-        if (!tmp[itm.type])
-            tmp[itm.type] = 0;
-        tmp[itm.type] -= itm.cnt;
-        var type = getItemTypeByID(itm.type);
-        var waste = type.waste/100;
-        var cnt = itm.cnt;
-        var me_list = this.pr.project.getBPMEList(itm.type);
-        while (cnt) {
-            var bp = me_list.next();
-            var wasteMul = 1 + waste/(1+bp.me);
-            var q = Math.min(cnt, bp.cnt);
-            for (let [m,u] in Iterator(type.raw)) {
-                if (!tmp[m])
-                    tmp[m] = 0;
-                tmp[m] += q*Math.round(wasteMul*u);
-            }
-            if (bp.fake)
-                tmpbp[type.bp] = q;
-            cnt -= q;
-        }
-        for (let [m,u] in Iterator(type.extra)) {
-            if (!tmp[m])
-                tmp[m] = 0;
-            tmp[m] += itm.cnt * u;
-        }
-    }
-    for each (var itm in this.pr.project.acquired) {
-        if (!tmp[itm.type])
-            tmp[itm.type] = 0;
-        tmp[itm.type] -= itm.cnt;
-    }
-    for (var i in tmpbp) {
-        if (tmpbp[i] <= 0)
-            continue;
-        var type = getItemTypeByID(i);
-        this.values.push({
-            type:   i,
-            itm:    type.type.name,
-            cnt:    tmpbp[i],
-            isk:    'N/A',
-        });
-        this.bpCount++;
-    }
-    if (this.values.length)
-        this.values.push({itm: false});
-    for (var i in tmp) {
-        if (tmp[i] <= 0)
-            continue;
-        var type = getItemTypeByID(i);
-        var me = this;
-        this.values.push({
-            type:   i,
-            itm:    type.type.name,
-            cnt:    tmp[i].toLocaleString(),
-            count:  tmp[i],
-            get isk() {
-                var price = getItemTypeByID(this.type).price;
-                if (price == -1)
-                    return ' ';
-                me.total += this.count*price;
-                price = (Math.round(price*100)/100).toLocaleString();
-                this.__defineGetter__('isk', function () price);
-            },
-        });
-    }
-    this.treebox.rowCountChanged(0, this.values.length);
-}
-
-function BuildTreeView() { }
-BuildTreeView.prototype = new TreeView();
-BuildTreeView.prototype.rebuild = function () {
-    this.treebox.rowCountChanged(0, -this.values.length);
-    this.values = [];
-    for each (var itm in this.pr.project.build)
-        this.values.push({
-            type:   itm.type,
-            itm:    getItemTypeByID(itm.type).type.name,
-            cnt:    itm.cnt.toLocaleString()
-        });
-    this.treebox.rowCountChanged(0, this.values.length);
-}
-
-function AcquiredTreeView() { }
-AcquiredTreeView.prototype = new TreeView();
-AcquiredTreeView.prototype.isBlueprint = function (aRow) aRow < this.bpCount;
-AcquiredTreeView.prototype.rebuild = function () {
-    this.treebox.rowCountChanged(0, -this.values.length);
-    this.values = [];
-    this.total = 0;
-    var me = this;
-    for each (var itm in this.pr.project.blueprints)
-        this.values.push({
-            type:   itm.type,
-            itm:    getItemTypeByID(itm.type).type.name,
-            me:     itm.me,
-            cnt:    itm.cnt || Infinity,
-        });
-    this.bpCount = this.values.length;
-    if (this.values.length)     // Separator
-        this.values.push({itm: false});
-    for each (var itm in this.pr.project.acquired) {
-        var type = getItemTypeByID(itm.type);
-        type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
-        this.values.push({
-            type:   itm.type,
-            itm:    type.type.name,
-            me:     ' ',
-            cnt:    itm.cnt.toLocaleString()
-        });
-    }
-    this.treebox.rowCountChanged(0, this.values.length);
-}
 
 const projFields = 'buy bp_buy order blueprints acquired build spent'.split(' ');
 function Project(box) {
@@ -391,7 +107,7 @@ Project.prototype = {
         this._store();
     },
     getBPMEList:    function (typeID) {
-        var bpID = getItemTypeByID(typeID).bp;
+        var bpID = ItemType.byID(typeID).bp;
         for each (var bp in [i for each (i in this.blueprints) if (i.type == bpID)].
                 sort(function (a, b) b.me - a.me))
             yield {cnt: bp.cnt, me: bp.me};
@@ -512,8 +228,8 @@ function gotIt1(spend_isk) {
     let buy = tabbox.tabpanels.selectedPanel.buyView;
     let itm = buy.active;
     var params = {in: buy.isBlueprint(buy.activeRow)
-        ? {dlg: 'blueprint', price: spend_isk ? getItemTypeByID(itm.type).price : 0}
-        : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? getItemTypeByID(itm.type).price : 0}
+        ? {dlg: 'blueprint', price: spend_isk ? ItemType.byID(itm.type).price : 0}
+        : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? ItemType.byID(itm.type).price : 0}
     };
     openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
@@ -531,8 +247,8 @@ function keepIt1(spend_isk) {
     let acquired = tabbox.selectedPanel.acquiredView;
     let itm = acquired.active;
     var params = {in: acquired.isBlueprint(acquired.activeRow)
-        ? {dlg: 'blueprint', price: spend_isk ? getItemTypeByID(itm.type).price : 0, me : itm.me}
-        : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? getItemTypeByID(itm.type).price : 0}
+        ? {dlg: 'blueprint', price: spend_isk ? ItemType.byID(itm.type).price : 0, me : itm.me}
+        : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? ItemType.byID(itm.type).price : 0}
     };
     openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
@@ -549,7 +265,7 @@ function builtIt1() {
     let project = tabbox.selectedPanel.project;
     let build = tabbox.selectedPanel.buildView;
     let itm = build.active;
-    var type = getItemTypeByID(itm.type);
+    var type = ItemType.byID(itm.type);
     var params = {in: {itm: itm, type: type, pr: project}};
     openDialog("chrome://pp/content/pp_build.xul", "", "chrome,dialog, modal", params).focus();
     if (!params.out || !params.out.cnt)
@@ -583,7 +299,7 @@ function init() {
             dump("production planner '"+Queries[i]+"': "+e+"\n"+conn.lastErrorString+"\n");
         }
 
-    for (i in showHide)
+    for (var i in showHide)
         document.getElementById(i+'-menu').addEventListener('popupshowing', showHide[i], true);
 
     gOS.addObserver({

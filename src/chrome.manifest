@@ -3,6 +3,7 @@ content wrapper .
 skin pp classic/1.0 chrome/skin/
 overlay chrome://jaet/content/jaet.xul chrome://pp/content/jaet.xul
 locale branding en-US locale/branding/
+resource pp modules/
 
 component {a3bce6bb-570f-450a-96e5-567d688bd398} components/eve-item-autocomplete.js
 contract @mozilla.org/autocomplete/search;1?name=item-type-autocomplete {a3bce6bb-570f-450a-96e5-567d688bd398}
