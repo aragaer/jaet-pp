@@ -63,7 +63,7 @@ function onLoad() {
     bps = [i for (i in params.in.pr.getBPMEList(params.in.itm.type))];
     bplist = document.getElementById('bplist');
     for each (var bp in bps)
-        bplist.appendItem("ME "+bp.me+"; Runs: "+bp.cnt);
+        bplist.appendItem("ME "+bp.me+"; Runs: "+bp.cnt+(bp.fake ? ' (dummy)' : ''));
     bplist.selectedIndex = 0;
     raw = [{id:id,cnt:cnt} for ([id,cnt] in Iterator(params.in.type.raw))];
     extra = [{id:id,cnt:cnt} for ([id,cnt] in Iterator(params.in.type.extra))];

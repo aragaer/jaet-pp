@@ -92,6 +92,7 @@ ItemType.prototype = {
         this.getPriceAsync();
         return this._price;
     },
+    get isBP() this.type.category.id == Ci.nsEveCategoryID.CATEGORY_BLUEPRINT,
 };
 
 var gDB  = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService);

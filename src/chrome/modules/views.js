@@ -2,11 +2,11 @@ EXPORTED_SYMBOLS=["OrderTreeView", "BuyTreeView", "BuildTreeView", "SpentTreeVie
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 Components.utils.import("resource://pp/itemtype.js");
+Components.utils.import("resource://pp/record.js");
 
 var gPC = Cc["@aragaer/eve/market-data/provider;1?name=eve-central"].
     getService(Ci.nsIEveMarketDataProviderService);
 var gEIS = Cc["@aragaer/eve/inventory;1"].getService(Ci.nsIEveInventoryService);
-
 
 // base class for all 5 views
 function TreeView() { }
@@ -18,6 +18,7 @@ TreeView.prototype = {
             this.totalLabel.value = this._total.toLocaleString()+" ISK total";
     },
     values:             [],
+    records:            {},
     get rowCount()      this.values.length,
     get active()        this.values[this.activeRow],
     getCellText:        function (aRow, aCol) this.values[aRow][aCol.id.split('-')[0]] || '??',
@@ -52,16 +53,12 @@ OrderTreeView.prototype = new TreeView();
 OrderTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
+    this.records = {};
     this.total = 0;
-    var me = this;
     for each (var itm in this.pr.project.order) {
-        var type = ItemType.byID(itm.type);
-        type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
-        this.values.push({
-            type:   itm.type,
-            itm:    type.type.name,
-            cnt:    itm.cnt.toLocaleString()
-        });
+        var rec = new ItemRecord(itm.type, this, itm.cnt);
+        this.values.push(rec);
+        this.records[rec.id] = rec;
     }
     this.treebox.rowCountChanged(0, this.values.length);
 }
@@ -71,22 +68,13 @@ SpentTreeView.prototype = new TreeView();
 SpentTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
+    this.records = {};
     this.total = 0;
     var me = this;
     for each (var itm in this.pr.project.spent) {
-        var type;
-        if (itm.type == 'isk')
-            me.total += itm.cnt;
-        else {
-            type = ItemType.byID(itm.type);
-            if (!itm.isBP)
-                type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
-        }
-        this.values.push({
-            type:   itm.type,
-            itm:    itm.type == 'isk' ? 'ISK' : type.type.name,
-            cnt:    itm.cnt.toLocaleString(),
-        });
+        var rec = new ItemRecord(itm.type, this, itm.cnt);
+        this.values.push(rec);
+        this.records[rec.id] = rec;
     }
     this.treebox.rowCountChanged(0, this.values.length);
 }
@@ -101,6 +89,7 @@ BuyTreeView.prototype.getImageSrc = function (row,col)
 BuyTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
+    this.records = {};
     let tmp = this.pr.project.buy = {};
     let tmpbp = this.pr.project.bp_buy = {};
     this.bpCount = 0;
@@ -141,6 +130,8 @@ BuyTreeView.prototype.rebuild = function () {
         else
             tmp[itm.type] = -itm.cnt;
     for (var i in tmpbp) {
+        var rec = new ItemRecord(i, this, tmpbp[i], 0);
+        this.records[rec.id] = rec;
         if (tmpbp[i] <= 0)
             continue;
         var type = ItemType.byID(i);
@@ -154,23 +145,14 @@ BuyTreeView.prototype.rebuild = function () {
     }
     if (this.values.length)             // if any blueprints
         this.values.push({itm: false}); // separator
-    for (var i in tmp) if (tmp[i] > 0) {
+    for (var i in tmp) {
+        var rec = new ItemRecord(i, this, tmp[i]);
+        this.records[rec.id] = rec;
+        if (tmp[i] <= 0)
+            continue;
         var type = ItemType.byID(i);
         var me = this;
-        this.values.push({
-            type:   i,
-            itm:    type.type.name,
-            cnt:    tmp[i].toLocaleString(),
-            count:  tmp[i],
-            get isk() {
-                var price = ItemType.byID(this.type).price;
-                if (price == -1)
-                    return ' ';
-                me.total += this.count*price;
-                price = (Math.round(price*100)/100).toLocaleString();
-                this.__defineGetter__('isk', function () price);
-            },
-        });
+        this.values.push(rec);
     }
     this.treebox.rowCountChanged(0, this.values.length);
 }
@@ -180,12 +162,11 @@ BuildTreeView.prototype = new TreeView();
 BuildTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
+    this.records = {};
     for each (var itm in this.pr.project.build)
-        this.values.push({
-            type:   itm.type,
-            itm:    ItemType.byID(itm.type).type.name,
-            cnt:    itm.cnt.toLocaleString()
-        });
+        var rec = new ItemRecord(itm.type, this, itm.cnt);
+        this.records[rec.id] = rec;
+        this.values.push(rec);
     this.treebox.rowCountChanged(0, this.values.length);
 }
 
@@ -195,27 +176,21 @@ AcquiredTreeView.prototype.isBlueprint = function (aRow) aRow < this.bpCount;
 AcquiredTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
+    this.records = {};
     this.total = 0;
     var me = this;
-    for each (var itm in this.pr.project.blueprints)
-        this.values.push({
-            type:   itm.type,
-            itm:    ItemType.byID(itm.type).type.name,
-            me:     itm.me,
-            cnt:    itm.cnt || Infinity,
-        });
+    for each (var itm in this.pr.project.blueprints) {
+        var rec = new ItemRecord(itm.type, this, itm.cnt || Infinity, itm.me);
+        this.records[rec.id] = rec;
+        this.values.push(rec);
+    }
     this.bpCount = this.values.length;
     if (this.values.length)     // Separator
         this.values.push({itm: false});
     for each (var itm in this.pr.project.acquired) {
-        var type = ItemType.byID(itm.type);
-        type.getPriceAsync(function (price, args) me.total += price*args.cnt, {cnt: itm.cnt});
-        this.values.push({
-            type:   itm.type,
-            itm:    type.type.name,
-            me:     ' ',
-            cnt:    itm.cnt.toLocaleString()
-        });
+        var rec = new ItemRecord(itm.type, this, itm.cnt);
+        this.values.push(rec);
+        this.records[rec.id] = rec;
     }
     this.treebox.rowCountChanged(0, this.values.length);
 }

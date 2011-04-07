@@ -1,2 +1,4 @@
 dialogdir=$(pkgdatadir)/chrome/content/dialogs
-dialog_DATA=pp.xul preferences.xul
+wrapperdir=$(pkgdatadir)/dialogs
+dialog_DATA=pp.xul
+wrapper_DATA=preferences.xul
