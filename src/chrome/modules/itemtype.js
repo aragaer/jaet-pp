@@ -49,9 +49,11 @@ ItemType.prototype = {
         } finally { stm.reset(); }
         return this[arg];
     },
-    get raw()   {
+    _getRawAndExtra:    function (arg) {
         this.__defineGetter__('raw', function () this._raw);
+        this.__defineGetter__('extra', function () this._extra);
         this._raw = {};
+        this._extra = {};
         let stm = Stms.getRawMats;
         try {
             stm.params.tid = this.id;
@@ -60,21 +62,34 @@ ItemType.prototype = {
         } catch (e) {
             dump("Filling 'raw' for "+this.type.name+": "+e+"\n");
         } finally { stm.reset(); }
-        return this._raw;
-    },
-    get extra() {
-        this.__defineGetter__('extra', function () this._extra);
-        this._extra = {};
+
+        var reproc = [];
         let stm = Stms.getExtraMats;
         try {
             stm.params.bpid = this.bp;
-            while (stm.step()) if (stm.row.damagePerJob) // TODO: Add reprocessing here
-                this._extra[stm.row.tid] = stm.row.quantity * stm.row.damagePerJob;
+            while (stm.step()) {
+                if (stm.row.damagePerJob)
+                    this._extra[stm.row.tid] = stm.row.quantity * stm.row.damagePerJob;
+                if (stm.row.damagePerJob == 1)  // Extra reprocessed material
+                    reproc.push(ItemType.byID(stm.row.tid));
+            }
         } catch (e) {
             dump("Filling 'extra' for "+this.type.name+": "+e+"\n");
+            dump(conn.lastErrorString+"\n");
         } finally { stm.reset(); }
-        return this._extra;
+
+        for each (var baseItem in reproc)
+            for (var m in baseItem.raw) if (this._raw[m]) {
+                this._raw[m] -= baseItem.raw[m];
+                if (this._raw[m] < 0)
+                    delete this._raw[m];
+            }
+
+        return this[arg];
     },
+    get raw()   this._getRawAndExtra('_raw'),
+    get extra() this._getRawAndExtra('_extra'),
+
     getPriceAsync:  function (handler, args) {
         var me = this;
         if (!this._price || this._price == -1)

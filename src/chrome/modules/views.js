@@ -37,7 +37,35 @@ TreeView.prototype = {
     getImageSrc:        function (row,col) null,
     getRowProperties:   function (row,props) { },
     getCellProperties:  function (row,col,props) { },
-    getColumnProperties: function (colid,col,props) { }
+    getColumnProperties: function (colid,col,props) { },
+    cycleHeader:        function (col) { },
+    addRecord:          function (rec) {
+        let oldrec = this.records[rec.id];
+        var oldreccnt;
+        if (oldrec) {
+            oldreccnt = oldrec.cnt;
+            oldrec.cnt += rec.count;
+        } else {
+            oldrec = rec;
+            oldreccnt = 0;
+        }
+        if (oldrec.cnt > 0 && oldreccnt <= 0) {
+            if (oldrec.type.isBP)
+                this.values.splice(this.bpCount++, 0, rec);
+            else
+                this.values.push(rec);
+        } else if (oldrec.cnt <= 0 && oldreccnt > 0) {
+            var idx = this.values.indexOf(rec);
+            if (idx != -1) {
+                this.values.splice(idx, 1);
+                if (oldrec.type.isBP)
+                    this.bpCount--;
+            }
+            if (oldrec.cnt == 0)
+                delete oldrec;
+        }
+    },
+    getRecord:          function (rec_id) this.records[rec_id] || null,
 };
 
 /* 5 different views.
@@ -163,10 +191,11 @@ BuildTreeView.prototype.rebuild = function () {
     this.treebox.rowCountChanged(0, -this.values.length);
     this.values = [];
     this.records = {};
-    for each (var itm in this.pr.project.build)
+    for each (var itm in this.pr.project.build) {
         var rec = new ItemRecord(itm.type, this, itm.cnt);
         this.records[rec.id] = rec;
         this.values.push(rec);
+    }
     this.treebox.rowCountChanged(0, this.values.length);
 }
 

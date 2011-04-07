@@ -64,8 +64,8 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(dialogdir)"
-DATA = $(dialog_DATA)
+am__installdirs = "$(DESTDIR)$(dialogdir)" "$(DESTDIR)$(wrapperdir)"
+DATA = $(dialog_DATA) $(wrapper_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 AMTAR = @AMTAR@
@@ -145,7 +145,9 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 dialogdir = $(pkgdatadir)/chrome/content/dialogs
-dialog_DATA = pp.xul preferences.xul
+wrapperdir = $(pkgdatadir)/dialogs
+dialog_DATA = pp.xul
+wrapper_DATA = preferences.xul
 all: all-am
 
 .SUFFIXES:
@@ -199,6 +201,26 @@ uninstall-dialogDATA:
 	test -n "$$files" || exit 0; \
 	echo " ( cd '$(DESTDIR)$(dialogdir)' && rm -f" $$files ")"; \
 	cd "$(DESTDIR)$(dialogdir)" && rm -f $$files
+install-wrapperDATA: $(wrapper_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(wrapperdir)" || $(MKDIR_P) "$(DESTDIR)$(wrapperdir)"
+	@list='$(wrapper_DATA)'; test -n "$(wrapperdir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(wrapperdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(wrapperdir)" || exit $$?; \
+	done
+
+uninstall-wrapperDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(wrapper_DATA)'; test -n "$(wrapperdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(wrapperdir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(wrapperdir)" && rm -f $$files
 tags: TAGS
 TAGS:
 
@@ -240,7 +262,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(dialogdir)"; do \
+	for dir in "$(DESTDIR)$(dialogdir)" "$(DESTDIR)$(wrapperdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -288,7 +310,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dialogDATA
+install-data-am: install-dialogDATA install-wrapperDATA
 
 install-dvi: install-dvi-am
 
@@ -332,7 +354,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dialogDATA
+uninstall-am: uninstall-dialogDATA uninstall-wrapperDATA
 
 .MAKE: install-am install-strip
 
@@ -342,10 +364,11 @@ uninstall-am: uninstall-dialogDATA
 	install-dialogDATA install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
 	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	install-ps install-ps-am install-strip install-wrapperDATA \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am uninstall uninstall-am uninstall-dialogDATA
+	pdf-am ps ps-am uninstall uninstall-am uninstall-dialogDATA \
+	uninstall-wrapperDATA
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

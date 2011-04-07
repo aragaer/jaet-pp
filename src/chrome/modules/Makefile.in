@@ -145,7 +145,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 moduledir = $(pkgdatadir)/modules
-module_DATA = itemtype.js views.js
+module_DATA = itemtype.js views.js record.js project.js
 all: all-am
 
 .SUFFIXES:

@@ -23,10 +23,23 @@ function ItemRecord(typeID, view, cnt, me) {
     if (typeID != 'isk') {
         var rec = this;
         this._type.getPriceAsync(function (p) rec._updateCost(p));
+
+        var bpID = this._type.bp;
+        this._waste = this._type.waste;
+        this.deps.raw = this._type.raw;
+        this.deps.extra = this._type.extra;
+        this.deps.bp = [i for each (i in this._view.pr.project.blueprints) if (i.type == bpID)].
+                sort(function (a, b) b.me - a.me);
     }
 }
 
 ItemRecord.prototype = {
+    deps: {
+        raw:    {},
+        extra:  {},
+        bp:     [],
+    },
+
     get id()    this._id = this._isBP ? [this._tid, '_', this._me].join('') : this._tid,
     get name()  this._name = this._tid == 'isk' ? 'ISK' : this._type.type.name,
 
@@ -34,8 +47,9 @@ ItemRecord.prototype = {
     get type()  this._tid,
 
     set cnt(count)  {
+        count = count || 0;
         this._cnt = count;
-        this._cntStr = count.toLocaleString();
+        this._cntStr = Math.ceil(count).toLocaleString();
         if (count == Infinity)
             this._price = 0;
 
@@ -58,7 +72,7 @@ ItemRecord.prototype = {
             this._view.total += this._cost;
     },
 
-    get isk()   this._cost === undefined ? ' ' : Math.round(this.price*100)/100,
+    get isk()   this._cost === undefined ? ' ' : (Math.ceil(this.price*100)/100).toLocaleString(),
     get me()    this._isBP ? this._me : ' ',
 };
 
