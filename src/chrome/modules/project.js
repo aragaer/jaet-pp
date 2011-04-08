@@ -79,11 +79,11 @@ Project.prototype = {
         this._store();
     },
     getBPMEList:    function (typeID) {
-        var bpID = ItemType.byID(typeID).bp;
+        let {bp:bpID, tl:tl} = ItemType.byID(typeID);
         for each (var bp in [i for each (i in this.blueprints) if (i.type == bpID)].
                 sort(function (a, b) b.me - a.me))
             yield {cnt: bp.cnt, me: bp.me};
-        yield {cnt: Infinity, me: 0, fake: true};
+        yield {cnt: Infinity, me: tl == 2 ? -4 : 0, fake: true};
     },
     wantToBuild:    function (typeID, count) { // count can be negative
         safeAdd(this.build, typeID, count);

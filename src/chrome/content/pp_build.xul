@@ -88,10 +88,15 @@ function bpselect() {
 }
 function recalc() {
     params.out.needed = {};
-    for each (var i in raw)
-        i.needed = runs.value * Math.round(i.cnt*(1 + params.in.type.waste/100/(1+bps[bplist.selectedIndex].me)));
+    for each (var i in raw) {
+        var me = bps[bplist.selectedIndex].me;
+        var wastecoeff = me > 0
+            ? 1/(1 + me)
+            : (1 - me);
+        i.needed = runs.value * Math.ceil(i.cnt*(1 + params.in.type.waste/100*wastecoeff));
+    }
     for each (i in extra)
-        i.needed = Math.round(runs.value * i.cnt * 100)/100;
+        i.needed = runs.value*Math.ceil(i.cnt);
     for each (i in raw.concat(extra)) {
         i.missing = Math.max(i.needed - i.present, 0);
         i.img = "chrome://pp/content/img/" + (i.missing ? 'missing' : 'present') + ".png";

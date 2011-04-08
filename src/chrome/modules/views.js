@@ -135,7 +135,9 @@ BuyTreeView.prototype.rebuild = function () {
         var me_list = this.pr.project.getBPMEList(itm.type);
         while (cnt) {
             var bp = me_list.next();
-            var wasteMul = 1 + waste/(1+bp.me);
+            var wasteMul = bp.me >= 0
+                    ? 1 + waste/(1+bp.me)
+                    : 1 + waste*(1-bp.me);
             var q = Math.min(cnt, bp.cnt);
             for (let [m,u] in Iterator(type.raw)) {
                 if (!tmp[m])

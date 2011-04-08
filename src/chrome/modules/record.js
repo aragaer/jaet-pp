@@ -72,7 +72,9 @@ ItemRecord.prototype = {
             this._view.total += this._cost;
     },
 
-    get isk()   this._cost === undefined ? ' ' : (Math.ceil(this.price*100)/100).toLocaleString(),
+    get isk()   this._cost === undefined || this._cost == -1
+        ? ' '
+        : (Math.ceil(this.price*100)/100).toLocaleString(),
     get me()    this._isBP ? this._me : ' ',
 };
 

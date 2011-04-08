@@ -9,7 +9,7 @@ var gEIS = Cc["@aragaer/eve/inventory;1"].getService(Ci.nsIEveInventoryService);
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 const Queries = {
-    getBPByType:    "select blueprintTypeID, wasteFactor from invBlueprintTypes where productTypeID=:tid",
+    getBPByType:    "select blueprintTypeID, wasteFactor, techLevel from invBlueprintTypes where productTypeID=:tid",
     getRawMats:     "select materialTypeID as tid, quantity from invTypeMaterials where typeID=:tid",
     getExtraMats:   "select requiredTypeID as tid, quantity, damagePerJob from ramTypeRequirements " +
             "where typeID=:bpid and activityID=1;",
@@ -33,9 +33,11 @@ ItemType.prototype = {
         return this._type = gEIS.getItemType(this.id);
     },
     get bp()    this._getBPAndWaste('_bp'),
+    get tl()    this._getBPAndWaste('_tl'),
     get waste() this._getBPAndWaste('_waste'),
     _getBPAndWaste: function (arg) {
         this.__defineGetter__('bp',     function () this._bp);
+        this.__defineGetter__('tl',     function () this._tl);
         this.__defineGetter__('waste',  function () this._waste);
         let stm = Stms.getBPByType;
         try {
@@ -43,6 +45,7 @@ ItemType.prototype = {
             if (stm.step()) {
                 this._bp = stm.row.blueprintTypeID;
                 this._waste = stm.row.wasteFactor;
+                this._tl = stm.row.techLevel;
             }
         } catch (e) {
             println("Production planner: getBPByType for "+this.id+": "+e);
@@ -56,6 +59,7 @@ ItemType.prototype = {
         this._extra = {};
         let stm = Stms.getRawMats;
         try {
+
             stm.params.tid = this.id;
             while (stm.step())
                 this._raw[stm.row.tid] = stm.row.quantity;
