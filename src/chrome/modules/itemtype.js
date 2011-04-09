@@ -97,10 +97,10 @@ ItemType.prototype = {
     getPriceAsync:  function (handler, args) {
         var me = this;
         if (!this._price || this._price == -1)
-            gPC.getPriceForItemAsync(this.id, {}, function (price) {
-                me._price = price;
+            gPC.getPriceForItemAsync2(this.id, {}, function (price) {
+                me._price = price.wrappedJSObject;
                 if (handler)
-                    handler(price, args);
+                    handler(me._price, args);
             });
         else if (handler)
             handler(this._price, args);

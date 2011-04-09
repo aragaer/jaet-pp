@@ -117,9 +117,7 @@ function doBuild() {
 }
 ]]></script>
     <caption id="name" />
-    <menulist id="bplist" oncommand="bpselect()">
-        <menupopup />
-    </menulist>
+    <menulist id="bplist" oncommand="bpselect()" />
     <hbox style="-moz-box-align:center">
         <caption label="Runs" />
         <textbox id="cnt" type="number" width="100px" min="1" onchange="recalc()"/>

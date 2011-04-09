@@ -37,6 +37,9 @@ function ppDummy() {
         <toolbarseparator />
         <toolbarbutton image="chrome://pp/content/img/undo.png" command="Edit:Undo" />
         <toolbarbutton image="chrome://pp/content/img/redo.png" command="Edit:Redo" />
+<!--        <spacer flex="1" />
+        <label value="Price" />
+        <menulist id="pricinglist" oncommand="recalcprices()" /> -->
     </toolbar>
     <menupopup id="buy-menu">
         <menuitem id="btn-build" label="Move to 'to build'" oncommand="buyBuild('build')"/>

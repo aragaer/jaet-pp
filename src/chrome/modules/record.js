@@ -1,4 +1,4 @@
-EXPORTED_SYMBOLS=["ItemRecord"];
+EXPORTED_SYMBOLS=["ItemRecord", "extractPrice"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -22,7 +22,7 @@ function ItemRecord(typeID, view, cnt, me) {
 
     if (typeID != 'isk') {
         var rec = this;
-        this._type.getPriceAsync(function (p) rec._updateCost(p));
+        this._type.getPriceAsync(function (p) rec._updateCost(extractPrice(p)));
 
         var bpID = this._type.bp;
         this._waste = this._type.waste;
@@ -58,7 +58,7 @@ ItemRecord.prototype = {
     get cnt()   this._cntStr,
     get count() this._cnt,
 
-    get price() this._price !== undefined ? this._price : this._type.price,
+    get price() this._price !== undefined ? this._price : extractPrice(this._type.price),
     set price(p) {
         this._price = p;
         this._updateCost();
@@ -77,4 +77,8 @@ ItemRecord.prototype = {
         : (Math.ceil(this.price*100)/100).toLocaleString(),
     get me()    this._isBP ? this._me : ' ',
 };
+
+function extractPrice(price_data) {
+    return price_data ? price_data.all.median : -1;
+}
 
