@@ -27,7 +27,8 @@ const showHide = {
         buy.activeRow = buy.treebox.getRowAt(aEvt.clientX, aEvt.clientY);
         if (buy.activeRow == -1 || !buy.active.itm)
             aEvt.preventDefault();
-        document.getElementById('btn-build').hidden = !ItemType.byID(buy.active.type).bp;
+        if (buy.active && buy.active.type)
+            document.getElementById('btn-build').hidden = !ItemType.byID(buy.active.type).bp;
     },
     acquired:   function (aEvt) {
         let acquired = tabbox.selectedPanel.acquiredView;

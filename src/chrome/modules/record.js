@@ -79,6 +79,6 @@ ItemRecord.prototype = {
 };
 
 function extractPrice(price_data) {
-    return price_data ? price_data.all.median : -1;
+    return price_data && price_data.all ? price_data.all.median : -1;
 }
 
