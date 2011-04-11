@@ -127,8 +127,8 @@ Project.prototype = {
                 this.spent[bp.type].isBP = true;
             return;
         }
-        println(JSON.stringify(bp));
-        println(JSON.stringify(this.blueprints));
+        dump(JSON.stringify(bp)+"\n");
+        dump(JSON.stringify(this.blueprints)+"\n");
         var id = bp.type+'_'+bp.me;
         var rbp = this.blueprints[id];
         rbp.cnt -= runs;

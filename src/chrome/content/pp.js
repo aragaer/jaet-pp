@@ -73,7 +73,7 @@ function buyBuild(action) {
     let src = action == 'buy' ? build : buy;
     if (!src.active)
         return;
-    var params = {in: {dlg: 'buy-build', amount: src.active.cnt}};
+    var params = {in: {dlg: 'buy-build', amount: src.active.count}};
     openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
         return;
@@ -85,8 +85,8 @@ function gotIt1(spend_isk) {
     let buy = tabbox.tabpanels.selectedPanel.buyView;
     let itm = buy.active;
     var params = {in: buy.isBlueprint(buy.activeRow)
-        ? {dlg: 'blueprint', price: spend_isk ? ItemType.byID(itm.type).price : 0}
-        : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? ItemType.byID(itm.type).price : 0}
+        ? {dlg: 'blueprint', price: spend_isk ? itm.price : 0}
+        : {dlg: 'buy-build', amount: itm.count, price: spend_isk ? itm.price : 0}
     };
     openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
@@ -104,8 +104,8 @@ function keepIt1(spend_isk) {
     let acquired = tabbox.selectedPanel.acquiredView;
     let itm = acquired.active;
     var params = {in: acquired.isBlueprint(acquired.activeRow)
-        ? {dlg: 'blueprint', price: spend_isk ? ItemType.byID(itm.type).price : 0, me : itm.me}
-        : {dlg: 'buy-build', amount: itm.cnt, price: spend_isk ? ItemType.byID(itm.type).price : 0}
+        ? {dlg: 'blueprint', price: spend_isk ? itm.price : 0, me : itm.me}
+        : {dlg: 'buy-build', amount: itm.count, price: spend_isk ? itm.price : 0}
     };
     openDialog("chrome://pp/content/pp_dlg.xul", "", "chrome,dialog,modal", params).focus();
     if (!params.out.count)
