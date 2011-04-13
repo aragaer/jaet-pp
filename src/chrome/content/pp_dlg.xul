@@ -73,8 +73,17 @@ function onLoad() {
     types[params.in.dlg].onload();
 }
 function forcecomplete_add(text) {
-    [typeID, typeName] = text.searchCount
-        ? [text.controller.getCommentAt(0), text.controller.getValueAt(0)]
+    var curval = text.value;
+    var controller = text.controller;
+    for (var i = 0; i < controller.matchCount; i++)
+        if (curval.toLowerCase() == controller.getValueAt(i).toLowerCase()) {
+            typeName = curval;
+            typeID = controller.getCommentAt(i);
+            return;
+        }
+    // nomatch or empty
+    [typeID, typeName] = controller.matchCount
+        ? [controller.getCommentAt(0), controller.getValueAt(0)]
         : [0, ''];
 }
 function updateTotal() {
