@@ -7,6 +7,7 @@ var gPC = Cc["@aragaer/eve/market-data/provider;1?name=eve-central"].
 var gEIS = Cc["@aragaer/eve/inventory;1"].getService(Ci.nsIEveInventoryService);
 
 Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("resource://pp/price_manager.js");
 
 const Queries = {
     getBPByType:    "select blueprintTypeID, wasteFactor, techLevel from invBlueprintTypes where productTypeID=:tid",
