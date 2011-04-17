@@ -308,7 +308,9 @@ function open() {
     openPanel(params.out.id);
 }
 
+Components.utils.import("resource://pp/price_manager.js");
 function close() {
+    do_magic();
     let project = tabbox.selectedPanel.project;
     if (!project.saved)
         switch (confirmSave()) {
