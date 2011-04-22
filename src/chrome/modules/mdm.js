@@ -53,39 +53,72 @@ mdm_variable.prototype = {
         return this._provider.getPriceForItemAsync2(typeID, {wrappedJSObject: this._params},
                 function (data) handler(self._extract(data)));
     },
+
+    // takes no typeID but returns a function for async invocation
+    invokeAsync:            function (handler) {
+        var self = this;
+        return function (typeID)
+            self._provider.getPriceForItemAsync2(typeID, {wrappedJSObject: self._params},
+                function (data) handler(self._extract(data)));
+    },
 };
 
-function makeEvaluateFunction(formula) {
+function analyzeFormula(formula) {
     var _variables = {};
     var varlist = [];
-    var results;
-    var _res;
     dump("Analyzing formula ["+formula+"]\n");
-    formula = formula.replace(/{(.*)}/g, function (str, tag, offset, s) {
+    formula = formula.replace(/{(.*?)}/g, function (str, tag, offset, s) {
         _variables[tag] = 1;
         return 'results["'+tag+'"]';
     });
-    formula = "_res = " + formula;
-    varlist = [i for (i in _variables)];
-    _variables = {};
+    return {
+        f:  formula,
+        v:  [i for (i in _variables)],
+    };
+}
 
+function makeEvaluateFunction(formula) {
+    let {f: formula, v: varlist} = analyzeFormula(formula);
     return function (typeID) {
-        _res = undefined;
-        results = {};
+        var results = {};
         [results[tag] = variables[tag].invokeForTypeID(typeID) for each (tag in varlist)];
         try {
-            eval(formula);
+            return eval(formula);
         } catch (e) {
             dump("Evaluating formula ["+formula+"]: "+e+"\n");
         }
-        return _res;
     };
+}
+
+function mkCB(results, tag)
+    function (price) results[tag] = price
+
+function mkStep(steps, tag, cb, step)
+    function (typeID)
+        variables[tag].invokeAsync(function (price) {
+            cb(price);
+            steps[+step+1](typeID); // Hack: we need step to be a Number
+        })(typeID)
+
+function makeAsyncEvaluateFunction(formula) {
+    let {f: formula, v: varlist} = analyzeFormula(formula);
+
+    return function (typeID, handler) {
+        const results = {}, steps = [];
+        // these are callbacks corresponding to async operations
+        const callbacks = [mkCB(results, v) for each (v in varlist)];
+        // these are chained steps
+        [steps[i] = mkStep(steps, varlist[i], callbacks[i], i) for (i in varlist)];
+        steps.push(function (typeID) handler(eval(formula)));
+        return steps[0](typeID);
+    }
 }
 
 function mdm_profile(name, formula) {
     this._name = name;
     this._formula = formula;
     this._evaluate = makeEvaluateFunction(formula);
+    this._evalAsync = makeAsyncEvaluateFunction(formula);
 }
 
 mdm_profile.prototype = {
@@ -96,6 +129,9 @@ mdm_profile.prototype = {
     getPriceForTypeID:      function (typeID) {
         return this._evaluate(typeID);
     },
+    getPriceForTypeIDAsync: function (typeID, handler) {
+        return this._evalAsync(typeID, handler);
+    }
 };
 
 
