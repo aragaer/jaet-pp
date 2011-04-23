@@ -29,13 +29,7 @@ const price_manager = {
         spc.setAttribute('flex', '1');
         cont.appendChild(spc);
 
-        var selected;
-        try {
-            selected = Services.prefs.getCharPref('jaet-pp.prices.selected-profile');
-        } catch (e) {
-            // do nothing
-        }
-
+        var selected = Services.prefs.getCharPref('jaet-pp.prices.selected-profile');
         if (!profiles[selected])
             selected = 'dfl';
 

@@ -1,6 +1,6 @@
-var gEIS, gDB, gPC, gPS, gOS;
 var tabbox;
 var undoBtn, redoBtn;
+Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://pp/itemtype.js");
 Components.utils.import("resource://pp/project.js");
 Components.utils.import("resource://pp/price_manager.js");
@@ -51,9 +51,9 @@ function addToProject1() {
 }
 
 function removeFromProject1() {
-    let project = tabbox.tabpanels.selectedPanel.project;
-    let order = tabbox.tabpanels.selectedPanel.orderView;
-    let buy = tabbox.tabpanels.selectedPanel.buyView;
+    let project = tabbox.selectedPanel.project;
+    let order = tabbox.selectedPanel.orderView;
+    let buy = tabbox.selectedPanel.buyView;
     let item = order.active;
     if (project.buy[item.type] <= 0) {
         alert("Can't remove item from project - not in 'to buy' list!");
@@ -68,9 +68,9 @@ function removeFromProject1() {
 
 /* move from 'to buy' to 'to build' or vice versa */
 function buyBuild(action) {
-    let project = tabbox.tabpanels.selectedPanel.project;
-    let build = tabbox.tabpanels.selectedPanel.buildView;
-    let buy = tabbox.tabpanels.selectedPanel.buyView;
+    let project = tabbox.selectedPanel.project;
+    let build = tabbox.selectedPanel.buildView;
+    let buy = tabbox.selectedPanel.buyView;
     let src = action == 'buy' ? build : buy;
     if (!src.active)
         return;
@@ -82,8 +82,8 @@ function buyBuild(action) {
 }
 
 function gotIt1(spend_isk) {
-    let project = tabbox.tabpanels.selectedPanel.project;
-    let buy = tabbox.tabpanels.selectedPanel.buyView;
+    let project = tabbox.selectedPanel.project;
+    let buy = tabbox.selectedPanel.buyView;
     let itm = buy.active;
     var params = {in: buy.isBlueprint(buy.activeRow)
         ? {dlg: 'blueprint', price: spend_isk ? itm.price : 0}
@@ -136,15 +136,8 @@ function builtIt1() {
 }
 
 function init() {
-    if (gEIS)
-        return;
-    gEIS = Cc["@aragaer/eve/inventory;1"].getService(Ci.nsIEveInventoryService);
-    gDB  = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService);
-    gPC  = Cc["@aragaer/eve/market-data/provider;1?name=eve-central"].
-            getService(Ci.nsIEveMarketDataProviderService);
-    gPS  = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
-    gOS = Cc["@mozilla.org/observer-service;1"].getService(Ci.nsIObserverService);
-    var conn = gDB.getConnection();
+    var DB  = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService);
+    var conn = DB.getConnection();
     tabbox = document.getElementById('tabbox');
     if (!conn.tableExists('projects'))
         conn.createTable('projects', 'projectID integer primary key autoincrement not null, ' +
@@ -160,7 +153,7 @@ function init() {
     for (var i in showHide)
         document.getElementById(i+'-menu').addEventListener('popupshowing', showHide[i], true);
 
-    gOS.addObserver({
+    Services.obs.addObserver({
         observe: function (aSubject, aTopic, aData) {
             var bool = aSubject.QueryInterface(Ci.nsISupportsPRBool);
             if (aTopic == 'quit-application-requested')
@@ -189,7 +182,7 @@ function openPanel(id) {
             if (stm.step())
                 name = stm.row.projectName;
             else
-                return gPS.alert(null, "Project not found", "Project "+id+" is not found");
+                return Services.prompt.alert(null, "Project not found", "Project "+id+" is not found");
         } catch (e) {
             println("getNameStm: "+e);
         } finally {
@@ -226,14 +219,13 @@ const projectList = {
     }
 }
 
-function confirmSave() {
-    let project = tabbox.selectedPanel.project;
-    var flags = gPS.BUTTON_POS_0 * gPS.BUTTON_TITLE_SAVE |
-        gPS.BUTTON_POS_1 * gPS.BUTTON_TITLE_IS_STRING |
-        gPS.BUTTON_POS_2 * gPS.BUTTON_TITLE_CANCEL;
-    return gPS.confirmEx(null, "Not saved", "Project '"+tabbox.selectedTab.label+
-            "' is not saved\nDiscard changes?", flags, "", "Discard", "", null, {});
-}
+let ps = Services.prompt;
+const prompt_flags = ps.BUTTON_POS_0 * ps.BUTTON_TITLE_SAVE |
+    ps.BUTTON_POS_1 * ps.BUTTON_TITLE_IS_STRING |
+    ps.BUTTON_POS_2 * ps.BUTTON_TITLE_CANCEL;
+function confirmSave()
+    Services.prompt.confirmEx(null, "Not saved", "Project '"+tabbox.selectedTab.label+
+            "' is not saved\nDiscard changes?", prompt_flags, "", "Discard", "", null, {});
 
 /* returns true if quit have to be cancelled */
 function ppPrepareQuit() {
@@ -258,7 +250,7 @@ tabpanels:
         }
         panelList.push(project.id);
     }
-    Prefs.setCharPref('jaet.production_planner.tabs', panelList.join(','));
+    Services.prefs.setCharPref('jaet.production_planner.tabs', panelList.join(','));
     return false;
 }
 
@@ -268,7 +260,7 @@ function save() {
         var name, id;
         while (!name) {
             var tmp = {value: 'New project'};
-            if  (!gPS.prompt(null, "Save project", "Enter a name", tmp, null, {}))
+            if  (!Services.prompt.prompt(null, "Save project", "Enter a name", tmp, null, {}))
                 return;
             name = tmp.value;
             let (stm = Stms.checkProjName) {
