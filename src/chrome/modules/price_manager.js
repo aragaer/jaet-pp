@@ -47,8 +47,22 @@ const price_manager = {
         curProfile = profiles[selected];
         Services.obs.notifyObservers(null, 'price-profile-change', null);
     },
-    getPriceForItemType:        function (typeID)
-            curProfile.getPriceForTypeID(typeID),
-    getPriceForItemTypeAsync:   function (typeID, handler)
-            curProfile.getPriceForTypeIDAsync(typeID, handler),
+    getPriceForItemType:        function (typeID) {
+        let curCache = priceCache[list.value];
+        if (curCache && curCache[typeID])
+            return curCache[typeID];
+        priceCache[list.value] = {};
+        return priceCache[list.value][typeID] = curProfile.getPriceForTypeID(typeID);
+    },
+    getPriceForItemTypeAsync:   function (typeID, handler) {
+        let curCache = priceCache[list.value];
+        if (curCache && curCache[typeID])
+            return handler(curCache[typeID])
+        priceCache[list.value] = {};
+        let curCache = priceCache[list.value];
+        curProfile.getPriceForTypeIDAsync(typeID, function (price) {
+            curCache[typeID] = price;
+            handler(price);
+        })
+    },
 };
