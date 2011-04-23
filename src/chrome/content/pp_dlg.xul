@@ -13,8 +13,8 @@ const types = {
         onload:     function () {
             var label = document.getElementById('label-bb');
             amount = document.getElementById('amount-bb');
-            label.value = "Please enter amount between 1 and " + params.in.amount;
-            amount.max = amount.value = params.in.amount;
+            label.value = "Please enter amount between 1 and " + Math.ceil(params.in.amount);
+            amount.max = amount.value = Math.ceil(params.in.amount);
             if (params.in.price) {
                 document.getElementById('cost').collapsed = false;
                 document.getElementById('price_pu').value = params.in.price;
