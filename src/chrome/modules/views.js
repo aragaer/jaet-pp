@@ -11,6 +11,7 @@ var gEIS = Cc["@aragaer/eve/inventory;1"].getService(Ci.nsIEveInventoryService);
 // base class for all 5 views
 function TreeView() { }
 TreeView.prototype = {
+    _total:             0,
     get total()         this._total,
     set total(value) {
         this._total = Math.round(value*100)/100;
@@ -66,6 +67,20 @@ TreeView.prototype = {
         }
     },
     getRecord:          function (rec_id) this.records[rec_id] || null,
+    costRecalc:         function () {
+        this._total = 0;
+        [rec.addToTotal() for each (rec in this.records)];
+    }, 
+    costAdd:            function (cost) this.total += cost,
+    observe:            function (aSubject, aTopic, aData) {
+        switch (aTopic) {
+        case 'price-profile-change':
+            this.costRecalc();
+            break;
+        default:
+            break;
+        }
+    },
 };
 
 /* 5 different views.

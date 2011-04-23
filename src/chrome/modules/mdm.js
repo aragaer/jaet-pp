@@ -126,6 +126,8 @@ mdm_profile.prototype = {
     _formula:   '',
     _evaluate:  function () null,
 
+    get name()  this._name,
+
     getPriceForTypeID:      function (typeID) {
         return this._evaluate(typeID);
     },
@@ -154,6 +156,8 @@ MDM = {
         profiles[name] = new mdm_profile(name, formula);
         return profiles[name];
     },
+    get profileNames()  [p for (p in profiles)],
+    getProfileByName:   function (p) profiles[p],
 };
 
 function registerProvider(providerName) {

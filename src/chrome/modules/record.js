@@ -5,6 +5,10 @@ const Ci = Components.interfaces;
 Components.utils.import("resource://pp/itemtype.js");
 Components.utils.import("resource://pp/views.js");
 
+// price - price of a single item
+// cost - cost of a whole record
+// isk - pretty string displaying price
+
 function ItemRecord(typeID, view, cnt, me) {
     this._view = view;
     this._tid = typeID;
@@ -22,8 +26,6 @@ function ItemRecord(typeID, view, cnt, me) {
 
     if (typeID != 'isk') {
         var rec = this;
-        this._type.getPriceAsync(function (p) rec._updateCost(extractPrice(p)));
-
         var bpID = this._type.bp;
         this._waste = this._type.waste;
         this.deps.raw = this._type.raw;
@@ -33,7 +35,10 @@ function ItemRecord(typeID, view, cnt, me) {
     }
 }
 
+// this._type.price forces price update from current price profile
+
 ItemRecord.prototype = {
+    _cnt:       0,
     deps: {
         raw:    {},
         extra:  {},
@@ -48,37 +53,57 @@ ItemRecord.prototype = {
 
     set cnt(count)  {
         count = count || 0;
+        this.rmFromTotal();
         this._cnt = count;
         this._cntStr = Math.ceil(count).toLocaleString();
-        if (count == Infinity)
-            this._price = 0;
-
-        this._updateCost();
+        this.addToTotal();
     },
     get cnt()   this._cntStr,
     get count() this._cnt,
 
-    get price() this._price !== undefined ? this._price : extractPrice(this._type.price),
-    set price(p) {
-        this._price = p;
-        this._updateCost();
+    get price() this._price !== undefined ? this._price : this._type.price,
+    set price(p) this._price = p,
+
+    get cost()  {
+        var count = safeCnt(this._cnt);
+        if (this._price !== undefined)  // Ignore profiles, our price is fixed
+            return count * this._price;
+        if (this._isBP)                 // blueprints are free unless fixed price is set
+            return 0;
+        var price = this._type.price;
+        if (price == -1)
+            return -1;
+        return count * price;
     },
 
-    _updateCost: function (price) {
-        if (this._cost && !this._isBP)
-            this._view.total -= this._cost;
-        this._cost = (this._cnt == Infinity ? 1 : this._cnt) * (price ? price : this.price);
-        if (!this._isBP)
-            this._view.total += this._cost;
+    addToTotal:     function () {
+        var cost = this.cost;
+        if (cost != -1)
+            return this._view.costAdd(cost);
+
+        // price is being fetched
+        if (this._updateInitiated)
+            return;
+        this._updateInitiated = true;
+
+        let self = this;
+        this._type.getPriceAsync(function (price) {
+            delete self._updateInitiated;
+            self._view.costAdd(safeCnt(self._cnt) * price);
+        });
     },
 
-    get isk()   this._cost === undefined || this._cost == -1
+    rmFromTotal:    function () {
+        var cost = this.cost;
+        if (cost != -1)
+            this._view.costAdd(-cost);
+    },
+
+    // this is re-invoked automatically by tree painter
+    get isk()   this._updateInitiated
         ? ' '
         : (Math.ceil(this.price*100)/100).toLocaleString(),
     get me()    this._isBP ? this._me : ' ',
 };
 
-function extractPrice(price_data) {
-    return price_data && price_data.all ? price_data.all.median : -1;
-}
-
+function safeCnt(cnt) cnt == Infinity ? 1 : cnt

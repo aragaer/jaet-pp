@@ -3,6 +3,7 @@ var tabbox;
 var undoBtn, redoBtn;
 Components.utils.import("resource://pp/itemtype.js");
 Components.utils.import("resource://pp/project.js");
+Components.utils.import("resource://pp/price_manager.js");
 const Queries = {
     getProjName:    "select projectName from projects where projectID=:id;",
     saveProjName:   "replace into projects (projectID, projectName) values (:id, :pname);",
@@ -169,6 +170,8 @@ function init() {
 
     undoBtn = document.getElementById("Edit:Undo");
     redoBtn = document.getElementById("Edit:Redo");
+
+    price_manager.addPriceProfileSelector(document.getElementsByTagName('toolbar')[0]);
 }
 
 function ppOnload() {
@@ -308,9 +311,7 @@ function open() {
     openPanel(params.out.id);
 }
 
-Components.utils.import("resource://pp/price_manager.js");
 function close() {
-    do_magic();
     let project = tabbox.selectedPanel.project;
     if (!project.saved)
         switch (confirmSave()) {
@@ -326,6 +327,3 @@ function close() {
     else
         tabbox.selectedIndex = currentIndex - 1;
 }
-
-
-

@@ -20,6 +20,7 @@ const AllItemTypes = {};
 function ItemType(typeID) {
     this.id = typeID;
     this._bp = this._waste = null;
+    Services.obs.addObserver(this, 'price-profile-change', null);
 }
 
 ItemType.byID = function (typeID) {
@@ -95,24 +96,34 @@ ItemType.prototype = {
     get raw()   this._getRawAndExtra('_raw'),
     get extra() this._getRawAndExtra('_extra'),
 
-    getPriceAsync:  function (handler, args) {
+    getPriceAsync:  function (handler) {
         var me = this;
         if (!this._price || this._price == -1)
-            gPC.getPriceForItemAsync2(this.id, {}, function (price) {
-                me._price = price.wrappedJSObject;
+            price_manager.getPriceForItemTypeAsync(this.id, function (price) {
+                me._price = price;
                 if (handler)
-                    handler(me._price, args);
+                    handler(me._price);
             });
         else if (handler)
-            handler(this._price, args);
+            handler(this._price);
     },
     get price() {
-        this.__defineGetter__('price', function () this._price);
-        this._price = -1;
-        this.getPriceAsync();
+        if (this._price === undefined) {
+            this.getPriceAsync();
+            this._price = -1;
+        }
         return this._price;
     },
     get isBP() this.type.category.id == Ci.nsEveCategoryID.CATEGORY_BLUEPRINT,
+    observe:    function (aSubject, aTopic, aData) {
+        switch (aTopic) {
+        case 'price-profile-change':
+            this._price = undefined;
+            break;
+        default:
+            break;
+        }
+    },
 };
 
 var gDB  = Cc["@aragaer/eve/db;1"].getService(Ci.nsIEveDBService);

@@ -72,6 +72,7 @@
                     var me = this;
                     var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
                     Components.utils.import("resource://pp/views.js");
+                    Components.utils.import("resource://gre/modules/Services.jsm");
                     [{cons: OrderTreeView,   anonid: 'order',  cols: ['itm', 'cnt']},
                     {cons: SpentTreeView,    anonid: 'spent',  cols: ['itm', 'cnt']},
                     {cons: BuyTreeView,      anonid: 'buy',    cols: ['itm', 'cnt', 'isk']},
@@ -103,6 +104,7 @@
                             treecol.setAttribute('label', label);
                             treecols.appendChild(treecol);
                         }
+                        Services.obs.addObserver(me[view], 'price-profile-change', false);
                         tree.view = me[view];
                     });
                 ]]></body>
